@@ -14,8 +14,8 @@ Pi-Hole, but it was too much for what I really wanted, just local DNS.
 ## ToDo
 
 - [x] Add persistent layer
-- [ ] Add support for A record
-- [ ] Add support for AAAA record
+- [x] Add support for A records
+- [ ] Add support for AAAA records
 - [ ] Support for IPv4 and IPv6 (?)
 - [ ] Prometheus metrics
 - [ ] Add go-releaser for binary

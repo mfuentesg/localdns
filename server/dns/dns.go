@@ -10,28 +10,26 @@ import (
 
 type Option func(*handler)
 
-func WithStorage(st *storage.Storage) Option {
+func WithStorage(st storage.Storage) Option {
 	return func(s *handler) {
 		s.st = st
 	}
 }
 
 type handler struct {
-	st *storage.Storage
+	st storage.Storage
 }
 
 func (s *handler) ServeDNS(w dns.ResponseWriter, m *dns.Msg) {
 	var message dns.Msg
-
-	message.SetReply(m)
 	question := m.Question[0]
-	domain := question.Name
 
 	if question.Qtype == dns.TypeA {
-		record, err := s.st.Get(question.Name)
+		message.SetReply(m)
+		domain := question.Name
+		record, err := s.st.Get(domain)
 
 		message.Authoritative = true
-		message.RecursionAvailable = true
 
 		if err == nil {
 			message.Answer = append(message.Answer, &dns.A{
@@ -44,7 +42,7 @@ func (s *handler) ServeDNS(w dns.ResponseWriter, m *dns.Msg) {
 				A: net.ParseIP(record.IP),
 			})
 		} else {
-			fmt.Printf("could not handle record %+v\n", err)
+			fmt.Printf("localdns: %+v\n", err)
 		}
 	}
 

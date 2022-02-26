@@ -8,11 +8,11 @@ import (
 	"syscall"
 
 	"github.com/mfuentesg/localdns/server/dns"
-	"github.com/mfuentesg/localdns/storage"
+	"github.com/mfuentesg/localdns/storage/embedded"
 )
 
 func main() {
-	st, err := storage.New()
+	st, err := embedded.New()
 	if err != nil {
 		log.Fatal(err)
 	}

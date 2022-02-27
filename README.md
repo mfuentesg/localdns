@@ -23,7 +23,7 @@ If you want to contribute, just execute `go run main.go` and you will get the se
 - [ ] Support for IPv4 and IPv6 (?)
 - [ ] Prometheus metrics
 - [ ] Add go-releaser for binary
-- [ ] Add GitHub actions pipeline
+- [x] Add GitHub actions pipeline
 - [ ] Add gRPC API
 
 ## Roadmap

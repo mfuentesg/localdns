@@ -25,6 +25,7 @@ If you want to contribute, just execute `go run main.go` and you will get the se
 - [ ] Add go-releaser for binary
 - [x] Add GitHub actions pipeline
 - [ ] Add gRPC API
+- [ ] Improve logging strategy
 
 ## Roadmap
 

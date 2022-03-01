@@ -22,7 +22,7 @@ func main() {
 	errs := make(chan error, 2)
 
 	go func() {
-		log.Printf("dns server started\n")
+		log.Printf("dns server started at %s\n", s.Addr)
 		errs <- s.ListenAndServe()
 	}()
 

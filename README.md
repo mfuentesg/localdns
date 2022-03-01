@@ -12,7 +12,8 @@ I just wanted to have a custom DNS on my home to handle custom domains, I tried 
 
 ## Development
 
-`localdns` uses an [embedded database](https://github.com/akrylysov/pogreb) to store each record in a persistent way, so any external database is required to work.
+`localdns` uses an [embedded database](https://github.com/akrylysov/pogreb) to store each record in a persistent way.
+
 If you want to contribute, just execute `go run main.go` and you will get the server running :).
 
 ## ToDo

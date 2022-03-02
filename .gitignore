@@ -3,3 +3,4 @@ dns
 .idea
 
 dist/
+.DS_Store

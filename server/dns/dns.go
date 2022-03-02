@@ -50,8 +50,8 @@ type handler struct {
 	dnsServer string
 }
 
-func forwardQuery(message *dns.Msg) (*dns.Msg, error) {
-	c := &dns.Client{Net: "udp"}
+func (h *handler) forwardQuery(message *dns.Msg) (*dns.Msg, error) {
+	c := &dns.Client{Net: h.protocol}
 	conn, err := c.Dial("8.8.8.8:53")
 
 	if err != nil {
@@ -80,8 +80,8 @@ func (h *handler) buildMessage(m *dns.Msg) (*dns.Msg, error) {
 	record, err := h.st.Get(domain)
 
 	if errors.Is(err, storage.ErrRecordNotFound) {
-		log.Printf("domain '%s' not found\n", domain)
-		return forwardQuery(m)
+		log.Printf("%s: domain '%s' not found\n", h.protocol, domain)
+		return h.forwardQuery(m)
 	}
 
 	if err != nil {

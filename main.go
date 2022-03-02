@@ -18,11 +18,27 @@ func main() {
 	}
 	defer st.Close()
 
-	s := dns.New(dns.WithStorage(st), dns.WithPort(8053), dns.WithDNSServer("8.8.8.8:53"))
 	errs := make(chan error, 2)
 
 	go func() {
-		log.Printf("dns server started at %s\n", s.Addr)
+		s := dns.New(
+			dns.WithProtocol("udp"),
+			dns.WithStorage(st),
+			dns.WithPort(8053),
+			dns.WithDNSServer("8.8.8.8:53"),
+		)
+		log.Printf("udp: dns server started at %s\n", s.Addr)
+		errs <- s.ListenAndServe()
+	}()
+
+	go func() {
+		s := dns.New(
+			dns.WithProtocol("tcp"),
+			dns.WithStorage(st),
+			dns.WithPort(8053),
+			dns.WithDNSServer("8.8.8.8:53"),
+		)
+		log.Printf("tcp: dns server started at %s\n", s.Addr)
 		errs <- s.ListenAndServe()
 	}()
 

@@ -18,7 +18,7 @@ func main() {
 	}
 	defer st.Close()
 
-	s := dns.New(dns.WithStorage(st))
+	s := dns.New(dns.WithStorage(st), dns.WithPort(8053), dns.WithDNSServer("8.8.8.8:53"))
 	errs := make(chan error, 2)
 
 	go func() {

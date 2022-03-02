@@ -36,45 +36,61 @@ func WithProtocol(protocol string) Option {
 	}
 }
 
+func WithDNSServer(dnsServer string) Option {
+	return func(h *handler) {
+		h.dnsServer = dnsServer
+	}
+}
+
 type handler struct {
-	st       storage.Storage
-	port     int
-	host     string
-	protocol string
+	st        storage.Storage
+	port      int
+	host      string
+	protocol  string
+	dnsServer string
 }
 
-func writeMessage(w dns.ResponseWriter, message *dns.Msg) {
-	_ = w.WriteMsg(message)
+func forwardQuery(message *dns.Msg) (*dns.Msg, error) {
+	c := &dns.Client{Net: "udp"}
+	conn, err := c.Dial("8.8.8.8:53")
+
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: should dial connection be closed?
+	// defer func() { _ = conn.Close() }()
+
+	response, _, err := c.ExchangeWithConn(message, conn)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }
 
-func (s *handler) ServeDNS(w dns.ResponseWriter, m *dns.Msg) {
-	var message dns.Msg
+func (h *handler) buildMessage(m *dns.Msg) (*dns.Msg, error) {
 	question := m.Question[0]
 
 	if question.Qtype != dns.TypeA {
-		_ = w.WriteMsg(&message)
-		return
+		return nil, errors.New("unsupported dns type")
 	}
 
-	message.SetReply(m)
 	domain := question.Name
-	record, err := s.st.Get(domain)
-
-	message.Authoritative = true
+	record, err := h.st.Get(domain)
 
 	if errors.Is(err, storage.ErrRecordNotFound) {
 		log.Printf("domain '%s' not found\n", domain)
-		writeMessage(w, &message)
-		return
+		return forwardQuery(m)
 	}
 
 	if err != nil {
-		log.Printf("could not process domain '%s', reason: %+v\n", domain, err)
-		// TODO: check if writeMessage is required
-		writeMessage(w, &message)
-		return
+		return nil, err
 	}
 
+	var message dns.Msg
+	message.SetReply(m)
+	message.Authoritative = true
 	message.Answer = append(message.Answer, &dns.A{
 		Hdr: dns.RR_Header{
 			Name:   domain,
@@ -85,11 +101,28 @@ func (s *handler) ServeDNS(w dns.ResponseWriter, m *dns.Msg) {
 		A: net.ParseIP(record.IP),
 	})
 
-	writeMessage(w, &message)
+	return &message, nil
+}
+
+func (h *handler) ServeDNS(w dns.ResponseWriter, m *dns.Msg) {
+	message, err := h.buildMessage(m)
+
+	if err != nil {
+		log.Printf("could not build message, reason: %+v\n", err)
+		_ = w.WriteMsg(m)
+		return
+	}
+
+	_ = w.WriteMsg(message)
 }
 
 func New(opts ...Option) dns.Server {
-	h := handler{port: 53, host: "", protocol: "udp"}
+	h := handler{
+		port:      53,
+		host:      "",
+		protocol:  "udp",
+		dnsServer: "8.8.8.8:53",
+	}
 
 	for _, opt := range opts {
 		opt(&h)

@@ -4,11 +4,17 @@ import (
 	"errors"
 	"log"
 	"net"
-	"strconv"
 
 	"github.com/mfuentesg/localdns/storage"
 	"github.com/miekg/dns"
 )
+
+type handler struct {
+	st        storage.Storage
+	addr      string
+	protocol  string
+	dnsServer string
+}
 
 type Option func(*handler)
 
@@ -18,15 +24,9 @@ func WithStorage(st storage.Storage) Option {
 	}
 }
 
-func WithPort(port int) Option {
+func WithAddr(addr string) Option {
 	return func(h *handler) {
-		h.port = port
-	}
-}
-
-func WithHost(host string) Option {
-	return func(h *handler) {
-		h.host = host
+		h.addr = addr
 	}
 }
 
@@ -42,17 +42,9 @@ func WithDNSServer(dnsServer string) Option {
 	}
 }
 
-type handler struct {
-	st        storage.Storage
-	port      int
-	host      string
-	protocol  string
-	dnsServer string
-}
-
 func (h *handler) forwardQuery(message *dns.Msg) (*dns.Msg, error) {
 	c := &dns.Client{Net: h.protocol}
-	conn, err := c.Dial("8.8.8.8:53")
+	conn, err := c.Dial(h.dnsServer)
 
 	if err != nil {
 		return nil, err
@@ -118,8 +110,7 @@ func (h *handler) ServeDNS(w dns.ResponseWriter, m *dns.Msg) {
 
 func New(opts ...Option) dns.Server {
 	h := handler{
-		port:      53,
-		host:      "",
+		addr:      ":53",
 		protocol:  "udp",
 		dnsServer: "8.8.8.8:53",
 	}
@@ -129,7 +120,7 @@ func New(opts ...Option) dns.Server {
 	}
 
 	return dns.Server{
-		Addr:    net.JoinHostPort(h.host, strconv.Itoa(h.port)),
+		Addr:    h.addr,
 		Net:     h.protocol,
 		Handler: &h,
 	}

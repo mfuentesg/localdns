@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"strings"
-	"time"
 
 	"github.com/mfuentesg/localdns/pb"
 	"github.com/mfuentesg/localdns/storage"
@@ -34,17 +33,22 @@ func WithAddr(addr string) Option {
 	}
 }
 
-func (srv *Server) AddRecord(ctx context.Context, r *pb.Record) (*pb.Record, error) {
+func (srv *Server) PutRecord(ctx context.Context, r *pb.Record) (*pb.Record, error) {
 	domain := r.Domain
 	if !strings.HasSuffix(domain, ".") {
 		domain += "."
+	}
+
+	ttl := r.Ttl
+	if ttl == 0 {
+		ttl = 604800
 	}
 
 	err := srv.st.Put(storage.Record{
 		Type:   r.Type,
 		Domain: domain,
 		IP:     r.Ip,
-		TTL:    604800 * time.Second,
+		TTL:    ttl,
 	})
 
 	if err != nil {
@@ -52,10 +56,6 @@ func (srv *Server) AddRecord(ctx context.Context, r *pb.Record) (*pb.Record, err
 	}
 
 	return srv.GetRecord(ctx, r)
-}
-
-func (srv *Server) UpdateRecord(ctx context.Context, r *pb.Record) (*pb.Record, error) {
-	return nil, fmt.Errorf("unimplemented")
 }
 
 func (srv *Server) DeleteRecord(ctx context.Context, r *pb.Record) (*emptypb.Empty, error) {
@@ -76,7 +76,7 @@ func (srv *Server) GetRecord(_ context.Context, r *pb.Record) (*pb.Record, error
 		Type:   record.Type,
 		Domain: record.Domain,
 		Ip:     record.IP,
-		Ttl:    int32(record.TTL.Seconds()),
+		Ttl:    record.TTL,
 	}, nil
 }
 

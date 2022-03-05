@@ -5,7 +5,9 @@ import (
 	"time"
 )
 
-var ErrRecordNotFound = errors.New("localdns: record not found")
+var (
+	ErrRecordNotFound = errors.New("localdns: record not found")
+)
 
 type Record struct {
 	Type   string
@@ -16,6 +18,7 @@ type Record struct {
 
 type Storage interface {
 	Put(r Record) error
-	Get(key string) (*Record, error)
-	Delete(key string) error
+	Get(identifier string) (*Record, error)
+	Delete(identifier string) error
+	Close() error
 }

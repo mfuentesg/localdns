@@ -19,9 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DnsServiceClient interface {
-	AddRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*Record, error)
+	PutRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*Record, error)
 	GetRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*Record, error)
-	UpdateRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*Record, error)
 	DeleteRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListRecords(ctx context.Context, in *RecordsFilter, opts ...grpc.CallOption) (*RecordList, error)
 }
@@ -34,9 +33,9 @@ func NewDnsServiceClient(cc grpc.ClientConnInterface) DnsServiceClient {
 	return &dnsServiceClient{cc}
 }
 
-func (c *dnsServiceClient) AddRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*Record, error) {
+func (c *dnsServiceClient) PutRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*Record, error) {
 	out := new(Record)
-	err := c.cc.Invoke(ctx, "/localdns.dns.DnsService/AddRecord", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/localdns.dns.DnsService/PutRecord", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -46,15 +45,6 @@ func (c *dnsServiceClient) AddRecord(ctx context.Context, in *Record, opts ...gr
 func (c *dnsServiceClient) GetRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*Record, error) {
 	out := new(Record)
 	err := c.cc.Invoke(ctx, "/localdns.dns.DnsService/GetRecord", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dnsServiceClient) UpdateRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*Record, error) {
-	out := new(Record)
-	err := c.cc.Invoke(ctx, "/localdns.dns.DnsService/UpdateRecord", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -83,9 +73,8 @@ func (c *dnsServiceClient) ListRecords(ctx context.Context, in *RecordsFilter, o
 // All implementations must embed UnimplementedDnsServiceServer
 // for forward compatibility
 type DnsServiceServer interface {
-	AddRecord(context.Context, *Record) (*Record, error)
+	PutRecord(context.Context, *Record) (*Record, error)
 	GetRecord(context.Context, *Record) (*Record, error)
-	UpdateRecord(context.Context, *Record) (*Record, error)
 	DeleteRecord(context.Context, *Record) (*emptypb.Empty, error)
 	ListRecords(context.Context, *RecordsFilter) (*RecordList, error)
 	mustEmbedUnimplementedDnsServiceServer()
@@ -95,14 +84,11 @@ type DnsServiceServer interface {
 type UnimplementedDnsServiceServer struct {
 }
 
-func (UnimplementedDnsServiceServer) AddRecord(context.Context, *Record) (*Record, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddRecord not implemented")
+func (UnimplementedDnsServiceServer) PutRecord(context.Context, *Record) (*Record, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PutRecord not implemented")
 }
 func (UnimplementedDnsServiceServer) GetRecord(context.Context, *Record) (*Record, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRecord not implemented")
-}
-func (UnimplementedDnsServiceServer) UpdateRecord(context.Context, *Record) (*Record, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateRecord not implemented")
 }
 func (UnimplementedDnsServiceServer) DeleteRecord(context.Context, *Record) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteRecord not implemented")
@@ -123,20 +109,20 @@ func RegisterDnsServiceServer(s grpc.ServiceRegistrar, srv DnsServiceServer) {
 	s.RegisterService(&DnsService_ServiceDesc, srv)
 }
 
-func _DnsService_AddRecord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _DnsService_PutRecord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Record)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DnsServiceServer).AddRecord(ctx, in)
+		return srv.(DnsServiceServer).PutRecord(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/localdns.dns.DnsService/AddRecord",
+		FullMethod: "/localdns.dns.DnsService/PutRecord",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DnsServiceServer).AddRecord(ctx, req.(*Record))
+		return srv.(DnsServiceServer).PutRecord(ctx, req.(*Record))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -155,24 +141,6 @@ func _DnsService_GetRecord_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DnsServiceServer).GetRecord(ctx, req.(*Record))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DnsService_UpdateRecord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Record)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DnsServiceServer).UpdateRecord(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/localdns.dns.DnsService/UpdateRecord",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DnsServiceServer).UpdateRecord(ctx, req.(*Record))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -221,16 +189,12 @@ var DnsService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*DnsServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AddRecord",
-			Handler:    _DnsService_AddRecord_Handler,
+			MethodName: "PutRecord",
+			Handler:    _DnsService_PutRecord_Handler,
 		},
 		{
 			MethodName: "GetRecord",
 			Handler:    _DnsService_GetRecord_Handler,
-		},
-		{
-			MethodName: "UpdateRecord",
-			Handler:    _DnsService_UpdateRecord_Handler,
 		},
 		{
 			MethodName: "DeleteRecord",

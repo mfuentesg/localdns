@@ -25,9 +25,8 @@ message RecordsFilter {
 }
 
 service DnsService {
-  rpc AddRecord (Record) returns (Record);
+  rpc PutRecord (Record) returns (Record);
   rpc GetRecord (Record) returns (Record);
-  rpc UpdateRecord (Record) returns (Record);
   rpc DeleteRecord (Record) returns (google.protobuf.Empty);
   rpc ListRecords (RecordsFilter) returns (RecordList);
 }

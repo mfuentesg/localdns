@@ -5,20 +5,8 @@ package localdns.dns;
 
 option go_package = "./;pb";
 
-enum RecordType {
-  A = 0;
-  AAAA = 1;
-  CNAME = 2;
-  MX = 3;
-  TXT = 4;
-  NS = 5;
-  SOA = 6;
-  SRV = 7;
-  PTR = 8;
-}
-
 message Record {
-  RecordType type = 1;
+  string type = 1;
   string domain = 3;
   string ip = 4;
   int32 ttl = 5;
@@ -38,6 +26,7 @@ message RecordsFilter {
 
 service DnsService {
   rpc AddRecord (Record) returns (Record);
+  rpc GetRecord (Record) returns (Record);
   rpc UpdateRecord (Record) returns (Record);
   rpc DeleteRecord (Record) returns (google.protobuf.Empty);
   rpc ListRecords (RecordsFilter) returns (RecordList);

@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DnsServiceClient interface {
 	AddRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*Record, error)
+	GetRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*Record, error)
 	UpdateRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*Record, error)
 	DeleteRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListRecords(ctx context.Context, in *RecordsFilter, opts ...grpc.CallOption) (*RecordList, error)
@@ -36,6 +37,15 @@ func NewDnsServiceClient(cc grpc.ClientConnInterface) DnsServiceClient {
 func (c *dnsServiceClient) AddRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*Record, error) {
 	out := new(Record)
 	err := c.cc.Invoke(ctx, "/localdns.dns.DnsService/AddRecord", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dnsServiceClient) GetRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*Record, error) {
+	out := new(Record)
+	err := c.cc.Invoke(ctx, "/localdns.dns.DnsService/GetRecord", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -74,6 +84,7 @@ func (c *dnsServiceClient) ListRecords(ctx context.Context, in *RecordsFilter, o
 // for forward compatibility
 type DnsServiceServer interface {
 	AddRecord(context.Context, *Record) (*Record, error)
+	GetRecord(context.Context, *Record) (*Record, error)
 	UpdateRecord(context.Context, *Record) (*Record, error)
 	DeleteRecord(context.Context, *Record) (*emptypb.Empty, error)
 	ListRecords(context.Context, *RecordsFilter) (*RecordList, error)
@@ -86,6 +97,9 @@ type UnimplementedDnsServiceServer struct {
 
 func (UnimplementedDnsServiceServer) AddRecord(context.Context, *Record) (*Record, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddRecord not implemented")
+}
+func (UnimplementedDnsServiceServer) GetRecord(context.Context, *Record) (*Record, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRecord not implemented")
 }
 func (UnimplementedDnsServiceServer) UpdateRecord(context.Context, *Record) (*Record, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateRecord not implemented")
@@ -123,6 +137,24 @@ func _DnsService_AddRecord_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DnsServiceServer).AddRecord(ctx, req.(*Record))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DnsService_GetRecord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Record)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DnsServiceServer).GetRecord(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/localdns.dns.DnsService/GetRecord",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DnsServiceServer).GetRecord(ctx, req.(*Record))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -191,6 +223,10 @@ var DnsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddRecord",
 			Handler:    _DnsService_AddRecord_Handler,
+		},
+		{
+			MethodName: "GetRecord",
+			Handler:    _DnsService_GetRecord_Handler,
 		},
 		{
 			MethodName: "UpdateRecord",

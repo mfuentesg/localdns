@@ -4,3 +4,5 @@ dns
 
 dist/
 .DS_Store
+tmp
+localdns.db

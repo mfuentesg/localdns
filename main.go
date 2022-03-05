@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	st, err := database.New(database.PogrebEngine)
+	st, err := database.New(database.SQLiteEngine)
 	if err != nil {
 		log.Fatal(err)
 	}

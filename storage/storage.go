@@ -2,7 +2,6 @@ package storage
 
 import (
 	"errors"
-	"time"
 )
 
 var (
@@ -13,7 +12,7 @@ type Record struct {
 	Type   string
 	Domain string
 	IP     string
-	TTL    time.Duration
+	TTL    int32
 }
 
 type Storage interface {

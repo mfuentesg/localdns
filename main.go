@@ -7,12 +7,13 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/mfuentesg/localdns/database"
 	"github.com/mfuentesg/localdns/server/dns"
-	"github.com/mfuentesg/localdns/storage/embedded"
+	"github.com/mfuentesg/localdns/server/grpc"
 )
 
 func main() {
-	st, err := embedded.New()
+	st, err := database.New(database.PogrebEngine)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -21,7 +22,7 @@ func main() {
 	errs := make(chan error, 2)
 	opts := []dns.Option{
 		dns.WithStorage(st),
-		dns.WithPort(8053),
+		dns.WithAddr(":8053"),
 		dns.WithDNSServer("8.8.8.8:53"),
 	}
 
@@ -38,9 +39,15 @@ func main() {
 	}()
 
 	go func() {
+		s := grpc.New(grpc.WithStorage(st), grpc.WithAddr(":8080"))
+		log.Printf("grpc server started at %s\n", s.Addr)
+		errs <- s.ListenAndServe()
+	}()
+
+	go func() {
 		c := make(chan os.Signal, 1)
-		signal.Notify(c, syscall.SIGINT)
+		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 		errs <- fmt.Errorf("%s", <-c)
 	}()
-	log.Printf("service terminated: %s\n", <-errs)
+	log.Printf("localdns: service %s\n", <-errs)
 }

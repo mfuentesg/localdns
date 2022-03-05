@@ -1,4 +1,4 @@
-package embedded
+package pogreb
 
 import (
 	"bytes"
@@ -8,38 +8,34 @@ import (
 	"github.com/mfuentesg/localdns/storage"
 )
 
-type Embedded struct {
+type Pogreb struct {
 	db *pogreb.DB
 }
 
-func New() (*Embedded, error) {
+func New() (*Pogreb, error) {
 	db, err := pogreb.Open("dns", nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Embedded{db: db}, nil
+	return &Pogreb{db: db}, nil
 }
 
-func (st *Embedded) Close() {
-	defer func() { _ = st.db.Close() }()
-}
-
-func (st *Embedded) Put(r storage.Record) error {
+func (pg *Pogreb) Put(r storage.Record) error {
 	var record bytes.Buffer
 	if err := gob.NewEncoder(&record).Encode(r); err != nil {
 		return err
 	}
 
-	if err := st.db.Put([]byte(r.Domain), record.Bytes()); err != nil {
+	if err := pg.db.Put([]byte(r.Domain), record.Bytes()); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (st *Embedded) Get(key string) (*storage.Record, error) {
-	data, err := st.db.Get([]byte(key))
+func (pg *Pogreb) Get(key string) (*storage.Record, error) {
+	data, err := pg.db.Get([]byte(key))
 
 	if len(data) == 0 {
 		return nil, storage.ErrRecordNotFound
@@ -57,6 +53,10 @@ func (st *Embedded) Get(key string) (*storage.Record, error) {
 	return &record, nil
 }
 
-func (st *Embedded) Delete(key string) error {
-	return st.db.Delete([]byte(key))
+func (pg *Pogreb) Delete(key string) error {
+	return pg.db.Delete([]byte(key))
+}
+
+func (pg *Pogreb) Close() error {
+	return pg.db.Close()
 }

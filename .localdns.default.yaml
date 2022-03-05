@@ -1,0 +1,24 @@
+---
+
+# specify the external dns to resolve unknown domain names
+forward_to: 8.8.8.8:53
+
+# enable or disable local dns features
+features:
+  udp_enable: true
+  tcp_enabled: true
+  grpc_enabled: true
+  prometheus_enabled: true
+
+# configuration per services exposed by localdns
+servers:
+  dns:
+    addr: :8053
+  grpc:
+    addr: :8080
+  prometheus:
+    addr: :9090
+
+# configuration for persistent layer (allowed engines sqlite, pogreb)
+storage:
+  engine: sqlite

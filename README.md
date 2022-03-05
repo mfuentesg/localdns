@@ -11,25 +11,81 @@ But, the most powerful reason is **Just for fun**.
 
 ## Development
 
-`localdns` uses an [embedded database](https://github.com/akrylysov/pogreb) to store each record in a persistent way.
+`localdns` supports embedded databases like [pogreb](https://github.com/akrylysov/pogreb) and [sqlite](https://www.sqlite.org/index.html) for persistent storing.
 
-If you want to run your own instance of `localDNS`, go the releases and download the most convenient binary for you or, clone this repo and execute `go run main.go` and the magic will start.
+If you want to run your own instance of `localDNS`, go to the [releases page](https://github.com/mfuentesg/localdns/releases) and download the most convenient binary for you, or, clone this repo and execute `go run main.go` and the magic will start.
 
 ### gRPC
 
 `localDNS` exposes a gRPC server in order, it brings you the flexibility to develop something awesome, like a custom UI to add/remove/edit records.
+
+## Systemd
+
+This service can be installed as systemd service. Use the following snippets as base for your configuration.
+These files assume that you have installed `localDNS` at `/opt/localdns/` directory and them will check for `/opt/localdns/localdns` binary file.
+
+**/etc/systemd/system/localdns.service**
+
+```ini
+[Unit]
+Description=localDNS service
+ConditionPathExists=/opt/localdns/localdns
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/opt/localdns/localdns
+WorkingDirectory=/opt/localdns/
+Restart=on-failure
+User=root
+Group=root
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=localdns
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**/etc/systemd/system/localdns-watcher.service**
+
+```ini
+[Unit]
+Description=localDNS watcher to restart localdns service on config changes
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl restart localdns.service
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**/etc/systemd/system/localdns-watcher.path**
+
+```ini
+[Path]
+PathModified=/opt/localdns/.localdns.yaml
+
+[Install]
+WantedBy=multi-user.target
+```
 
 ## ToDo
 
 - [x] Add persistent layer
 - [x] Add support for A records
 - [ ] Add support for AAAA records
-- [ ] Support for IPv4 and IPv6 (?)
+- [x] Support for IPv4
+- [ ] Support for IPv6
 - [ ] Prometheus metrics
-- [ ] Add go-releaser for binary
-- [x] Add GitHub actions pipeline
+- [x] go-releaser binary creation
+- [x] GitHub actions pipeline
 - [ ] Add gRPC API
-- [ ] Improve logging strategy
+- [ ] Logging strategy
+- [ ] Configuration layer
 
 ## Roadmap
 

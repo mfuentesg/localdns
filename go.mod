@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/akrylysov/pogreb v0.10.1
+	github.com/jmoiron/sqlx v1.3.4
 	github.com/mattn/go-sqlite3 v1.14.12
 	github.com/miekg/dns v1.1.46
 	google.golang.org/grpc v1.44.0

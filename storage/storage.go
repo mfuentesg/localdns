@@ -19,5 +19,6 @@ type Storage interface {
 	Put(r Record) error
 	Get(identifier string) (*Record, error)
 	Delete(identifier string) error
+	List() ([]*Record, error)
 	Close() error
 }

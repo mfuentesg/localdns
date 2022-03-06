@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"strings"
 
@@ -66,8 +65,24 @@ func (srv *Server) DeleteRecord(_ context.Context, r *pb.Record) (*emptypb.Empty
 	return new(emptypb.Empty), nil
 }
 
-func (srv *Server) ListRecords(ctx context.Context, f *pb.RecordsFilter) (*pb.RecordList, error) {
-	return nil, fmt.Errorf("unimplemented")
+func (srv *Server) ListRecords(_ context.Context, _ *emptypb.Empty) (*pb.RecordList, error) {
+	records, err := srv.st.List()
+
+	if err != nil {
+		return nil, err
+	}
+
+	list := make([]*pb.Record, 0, len(records))
+	for _, record := range records {
+		list = append(list, &pb.Record{
+			Type:   record.Type,
+			Domain: record.Domain,
+			Ip:     record.IP,
+			Ttl:    record.TTL,
+		})
+	}
+
+	return &pb.RecordList{Records: list}, nil
 }
 
 func (srv *Server) GetRecord(_ context.Context, r *pb.Record) (*pb.Record, error) {

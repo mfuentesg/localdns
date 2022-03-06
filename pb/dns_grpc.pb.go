@@ -22,7 +22,7 @@ type DnsServiceClient interface {
 	PutRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*Record, error)
 	GetRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*Record, error)
 	DeleteRecord(ctx context.Context, in *Record, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	ListRecords(ctx context.Context, in *RecordsFilter, opts ...grpc.CallOption) (*RecordList, error)
+	ListRecords(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*RecordList, error)
 }
 
 type dnsServiceClient struct {
@@ -60,7 +60,7 @@ func (c *dnsServiceClient) DeleteRecord(ctx context.Context, in *Record, opts ..
 	return out, nil
 }
 
-func (c *dnsServiceClient) ListRecords(ctx context.Context, in *RecordsFilter, opts ...grpc.CallOption) (*RecordList, error) {
+func (c *dnsServiceClient) ListRecords(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*RecordList, error) {
 	out := new(RecordList)
 	err := c.cc.Invoke(ctx, "/localdns.dns.DnsService/ListRecords", in, out, opts...)
 	if err != nil {
@@ -76,7 +76,7 @@ type DnsServiceServer interface {
 	PutRecord(context.Context, *Record) (*Record, error)
 	GetRecord(context.Context, *Record) (*Record, error)
 	DeleteRecord(context.Context, *Record) (*emptypb.Empty, error)
-	ListRecords(context.Context, *RecordsFilter) (*RecordList, error)
+	ListRecords(context.Context, *emptypb.Empty) (*RecordList, error)
 	mustEmbedUnimplementedDnsServiceServer()
 }
 
@@ -93,7 +93,7 @@ func (UnimplementedDnsServiceServer) GetRecord(context.Context, *Record) (*Recor
 func (UnimplementedDnsServiceServer) DeleteRecord(context.Context, *Record) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteRecord not implemented")
 }
-func (UnimplementedDnsServiceServer) ListRecords(context.Context, *RecordsFilter) (*RecordList, error) {
+func (UnimplementedDnsServiceServer) ListRecords(context.Context, *emptypb.Empty) (*RecordList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListRecords not implemented")
 }
 func (UnimplementedDnsServiceServer) mustEmbedUnimplementedDnsServiceServer() {}
@@ -164,7 +164,7 @@ func _DnsService_DeleteRecord_Handler(srv interface{}, ctx context.Context, dec 
 }
 
 func _DnsService_ListRecords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RecordsFilter)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func _DnsService_ListRecords_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: "/localdns.dns.DnsService/ListRecords",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DnsServiceServer).ListRecords(ctx, req.(*RecordsFilter))
+		return srv.(DnsServiceServer).ListRecords(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

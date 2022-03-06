@@ -14,19 +14,11 @@ message Record {
 
 message RecordList {
   repeated Record records = 1;
-  int32 page = 2;
-  int32 total = 3;
-}
-
-message RecordsFilter {
-  int32 page = 1;
-  int32 offset = 2;
-  string query = 3;
 }
 
 service DnsService {
   rpc PutRecord (Record) returns (Record);
   rpc GetRecord (Record) returns (Record);
   rpc DeleteRecord (Record) returns (google.protobuf.Empty);
-  rpc ListRecords (RecordsFilter) returns (RecordList);
+  rpc ListRecords (google.protobuf.Empty) returns (RecordList);
 }

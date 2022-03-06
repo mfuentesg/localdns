@@ -4,12 +4,13 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // sqlite driver
 	"github.com/mfuentesg/localdns/storage"
 )
 
 type SQLite struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 func (sq *SQLite) prepareDB() error {
@@ -26,7 +27,7 @@ func (sq *SQLite) prepareDB() error {
 }
 
 func New() (*SQLite, error) {
-	db, err := sql.Open("sqlite3", "localdns.db")
+	db, err := sqlx.Open("sqlite3", "localdns.db")
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +74,15 @@ func (sq *SQLite) Delete(identifier string) error {
 	_, err := sq.db.Exec(query, identifier)
 
 	return err
+}
+
+func (sq *SQLite) List() ([]*storage.Record, error) {
+	var records []*storage.Record
+	query := `select domain, ip, ttl, type from records`
+	if err := sq.db.Select(&records, query); err != nil {
+		return nil, err
+	}
+	return records, nil
 }
 
 func (sq *SQLite) Close() error {

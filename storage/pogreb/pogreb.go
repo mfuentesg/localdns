@@ -3,6 +3,7 @@ package pogreb
 import (
 	"bytes"
 	"encoding/gob"
+	"errors"
 
 	"github.com/akrylysov/pogreb"
 	"github.com/mfuentesg/localdns/storage"
@@ -55,6 +56,10 @@ func (pg *Pogreb) Get(key string) (*storage.Record, error) {
 
 func (pg *Pogreb) Delete(key string) error {
 	return pg.db.Delete([]byte(key))
+}
+
+func (pg *Pogreb) List() ([]*storage.Record, error) {
+	return nil, errors.New("not implemented")
 }
 
 func (pg *Pogreb) Close() error {

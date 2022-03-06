@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
+	"log"
 
 	"github.com/akrylysov/pogreb"
 	"github.com/mfuentesg/localdns/storage"
@@ -59,7 +60,24 @@ func (pg *Pogreb) Delete(key string) error {
 }
 
 func (pg *Pogreb) List() ([]*storage.Record, error) {
-	return nil, errors.New("not implemented")
+	iter := pg.db.Items()
+
+	var records []*storage.Record
+
+	for {
+		_, value, err := iter.Next()
+		if errors.Is(err, pogreb.ErrIterationDone) {
+			break
+		}
+		var record storage.Record
+		if err := gob.NewDecoder(bytes.NewReader(value)).Decode(&record); err != nil {
+			log.Printf("unable to parse record")
+			continue
+		}
+		records = append(records, &record)
+	}
+
+	return records, nil
 }
 
 func (pg *Pogreb) Close() error {

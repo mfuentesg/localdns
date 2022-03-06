@@ -5,8 +5,8 @@ import (
 	"errors"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/mattn/go-sqlite3" // sqlite driver
 	"github.com/mfuentesg/localdns/storage"
+	_ "modernc.org/sqlite" // sqlite driver
 )
 
 type SQLite struct {
@@ -27,7 +27,7 @@ func (sq *SQLite) prepareDB() error {
 }
 
 func New() (*SQLite, error) {
-	db, err := sqlx.Open("sqlite3", "localdns.db")
+	db, err := sqlx.Open("sqlite", "localdns.db")
 	if err != nil {
 		return nil, err
 	}

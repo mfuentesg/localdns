@@ -83,7 +83,7 @@ WantedBy=multi-user.target
 - [ ] Prometheus metrics
 - [x] go-releaser binary creation
 - [x] GitHub actions pipeline
-- [ ] Add gRPC API
+- [x] Add gRPC API
 - [ ] Logging strategy
 - [ ] Configuration layer
 

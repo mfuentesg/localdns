@@ -58,8 +58,12 @@ func (srv *Server) PutRecord(ctx context.Context, r *pb.Record) (*pb.Record, err
 	return srv.GetRecord(ctx, r)
 }
 
-func (srv *Server) DeleteRecord(ctx context.Context, r *pb.Record) (*emptypb.Empty, error) {
-	return nil, fmt.Errorf("unimplemented")
+func (srv *Server) DeleteRecord(_ context.Context, r *pb.Record) (*emptypb.Empty, error) {
+	err := srv.st.Delete(r.Domain)
+	if err != nil {
+		return nil, err
+	}
+	return new(emptypb.Empty), nil
 }
 
 func (srv *Server) ListRecords(ctx context.Context, f *pb.RecordsFilter) (*pb.RecordList, error) {

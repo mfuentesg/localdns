@@ -43,7 +43,7 @@ func WithDNSServer(dnsServer string) Option {
 }
 
 func (h *handler) forwardQuery(message *dns.Msg) (*dns.Msg, error) {
-	c := &dns.Client{Net: h.protocol}
+	c := &dns.Client{Net: "udp"}
 	conn, err := c.Dial(h.dnsServer)
 
 	if err != nil {

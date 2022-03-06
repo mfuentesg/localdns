@@ -54,12 +54,14 @@ func (sq *SQLite) Get(identifier string) (*storage.Record, error) {
 	query := `select domain, ip, ttl, type from records where domain = ?`
 	row := sq.db.QueryRow(query, identifier)
 
-	if row.Err() == sql.ErrNoRows {
+	var record storage.Record
+	err := row.Scan(&record.Domain, &record.IP, &record.TTL, &record.Type)
+
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, storage.ErrRecordNotFound
 	}
 
-	var record storage.Record
-	if err := row.Scan(&record.Domain, &record.IP, &record.TTL, &record.Type); err != nil {
+	if err != nil {
 		return nil, err
 	}
 
@@ -67,7 +69,10 @@ func (sq *SQLite) Get(identifier string) (*storage.Record, error) {
 }
 
 func (sq *SQLite) Delete(identifier string) error {
-	return errors.New("unimplemented")
+	query := `delete from records where domain = ?`
+	_, err := sq.db.Exec(query, identifier)
+
+	return err
 }
 
 func (sq *SQLite) Close() error {

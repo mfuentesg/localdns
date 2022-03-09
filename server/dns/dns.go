@@ -7,7 +7,6 @@ import (
 type Server struct {
 	Addr     string
 	Protocol string
-	server   *dns.Server
 }
 
 type Option func(*Server)

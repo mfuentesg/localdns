@@ -7,10 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type fakeHandler struct{}
-
-func (h *fakeHandler) ServeDNS(w dns.ResponseWriter, m *dns.Msg) {
-	_ = w.WriteMsg(m)
+type fakeHandler struct {
+	dns.Handler
 }
 
 func TestNew(t *testing.T) {

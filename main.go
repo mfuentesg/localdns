@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/mfuentesg/localdns/database"
+	"github.com/mfuentesg/localdns/handler"
 	"github.com/mfuentesg/localdns/server/dns"
 	"github.com/mfuentesg/localdns/server/grpc"
 )
@@ -17,23 +18,20 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	defer st.Close()
 
+	h := handler.New(st, handler.WithDNSServer("8.8.8.8:53"))
 	errs := make(chan error, 2)
-	opts := []dns.Option{
-		dns.WithStorage(st),
-		dns.WithAddr(":8053"),
-		dns.WithDNSServer("8.8.8.8:53"),
-	}
 
 	go func() {
-		s := dns.New(append(opts, dns.WithProtocol("udp"))...)
+		s := dns.New(h, dns.WithAddr(":8053"), dns.WithProtocol("udp"))
 		log.Printf("udp: dns server started at %s\n", s.Addr)
 		errs <- s.ListenAndServe()
 	}()
 
 	go func() {
-		s := dns.New(append(opts, dns.WithProtocol("tcp"))...)
+		s := dns.New(h, dns.WithAddr(":8053"), dns.WithProtocol("tcp"))
 		log.Printf("tcp: dns server started at %s\n", s.Addr)
 		errs <- s.ListenAndServe()
 	}()

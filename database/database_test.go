@@ -16,7 +16,7 @@ func TestNew(t *testing.T) {
 		assert.Nil(tt, st)
 	})
 
-	t.Run("return expected pogreb engine", func(tt *testing.T) {
+	t.Run("return pogreb engine", func(tt *testing.T) {
 		st, err := New(PogrebEngine)
 
 		assert.Nil(tt, err)
@@ -24,7 +24,7 @@ func TestNew(t *testing.T) {
 		assert.IsType(tt, new(pogreb.Pogreb), st)
 	})
 
-	t.Run("return expected sqlite engine", func(tt *testing.T) {
+	t.Run("return sqlite engine", func(tt *testing.T) {
 		st, err := New(SQLiteEngine)
 
 		assert.Nil(tt, err)

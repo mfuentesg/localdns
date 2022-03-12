@@ -11,7 +11,7 @@ But, the most powerful reason is **Just for fun**.
 
 ## Development
 
-`localdns` supports embedded databases like [pogreb](https://github.com/akrylysov/pogreb) and [sqlite](https://www.sqlite.org/index.html) for persistent storing.
+`localdns` supports embedded databases like [sqlite](https://www.sqlite.org/index.html) for persistent storing.
 
 If you want to run your own instance of `localDNS`, go to the [releases page](https://github.com/mfuentesg/localdns/releases) and download the most convenient binary for you, or, clone this repo and execute `go run main.go` and the magic will start.
 

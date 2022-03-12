@@ -19,6 +19,3 @@ servers:
   prometheus:
     addr: :9090
 
-# configuration for persistent layer (allowed engines sqlite, pogreb)
-storage:
-  engine: sqlite

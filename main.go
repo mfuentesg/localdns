@@ -7,21 +7,21 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/mfuentesg/localdns/database"
 	"github.com/mfuentesg/localdns/handler"
 	"github.com/mfuentesg/localdns/server/dns"
 	"github.com/mfuentesg/localdns/server/grpc"
+	"github.com/mfuentesg/localdns/storage/sqlite"
 )
 
 func main() {
-	st, err := database.New(database.SQLiteEngine)
+	db, err := sqlite.New()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer st.Close()
+	defer db.Close()
 
-	h := handler.New(st, handler.WithDNSServer("8.8.8.8:53"))
+	h := handler.New(db, handler.WithDNSServer("8.8.8.8:53"))
 	errs := make(chan error, 2)
 
 	go func() {
@@ -37,7 +37,7 @@ func main() {
 	}()
 
 	go func() {
-		s := grpc.New(grpc.WithStorage(st), grpc.WithAddr(":8080"))
+		s := grpc.New(grpc.WithStorage(db), grpc.WithAddr(":8080"))
 		log.Printf("grpc server started at %s\n", s.Addr)
 		errs <- s.ListenAndServe()
 	}()

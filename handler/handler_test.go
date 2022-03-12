@@ -108,6 +108,16 @@ func TestHandler_ServeDNS(t *testing.T) {
 		assert.Equal(tt, "1.1.1.1", recorder.Msg.Answer[0].(*dns.A).A.String())
 	})
 
+	t.Run("forward to an invalid DNS server", func(tt *testing.T) {
+		message := new(dns.Msg)
+		message.SetQuestion(dns.Fqdn("www.fake.com"), dns.TypeA)
+		h := New(new(fakeStorage), WithDNSServer("123.123.123.123"))
+		recorder := dnstest.NewRecorder(new(fakeDNSRW))
+
+		h.ServeDNS(recorder, message)
+		assert.Len(tt, recorder.Msg.Answer, 0)
+	})
+
 	t.Run("get stored dns from storage", func(tt *testing.T) {
 		message := new(dns.Msg)
 		message.SetQuestion(dns.Fqdn("www.valid-domain.com"), dns.TypeA)

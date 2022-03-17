@@ -7,7 +7,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/mfuentesg/dnstest"
+	"github.com/coredns/coredns/plugin/pkg/dnstest"
 	"github.com/mfuentesg/localdns/storage"
 	"github.com/miekg/dns"
 	"github.com/stretchr/testify/assert"

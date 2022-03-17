@@ -131,4 +131,46 @@ func TestHandler_ServeDNS(t *testing.T) {
 	})
 }
 
-func BenchmarkHandler_ServeDNS(b *testing.B) {}
+func BenchmarkHandler_ServeDNS(b *testing.B) {
+	log.SetOutput(ioutil.Discard)
+
+	b.Run("get stored dns from storage", func(bb *testing.B) {
+		message := new(dns.Msg)
+		message.SetQuestion(dns.Fqdn("www.valid-domain.com"), dns.TypeA)
+		h := New(new(fakeStorage))
+		recorder := dnstest.NewRecorder(new(fakeDNSRW))
+
+		for i := 0; i < b.N; i++ {
+			h.ServeDNS(recorder, message)
+		}
+	})
+
+	b.Run("forward query to DNS server", func(bb *testing.B) {
+		message := new(dns.Msg)
+		message.SetQuestion(dns.Fqdn("www.fake.com"), dns.TypeA)
+
+		server := dnstest.NewServer(func(writer dns.ResponseWriter, msg *dns.Msg) {
+			m := new(dns.Msg)
+			m.SetReply(msg)
+
+			m.Answer = append(m.Answer, &dns.A{
+				Hdr: dns.RR_Header{
+					Name:   "www.fake.com.",
+					Rrtype: dns.TypeA,
+					Class:  dns.ClassINET,
+					Ttl:    60,
+				},
+				A: net.ParseIP("1.1.1.1"),
+			})
+
+			_ = writer.WriteMsg(m)
+		})
+		defer server.Close()
+		h := New(new(fakeStorage), WithDNSServer(server.Addr))
+		recorder := dnstest.NewRecorder(new(fakeDNSRW))
+
+		for i := 0; i < b.N; i++ {
+			h.ServeDNS(recorder, message)
+		}
+	})
+}

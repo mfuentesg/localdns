@@ -33,28 +33,33 @@ func WithAddr(addr string) Option {
 }
 
 func (srv *Server) PutRecord(ctx context.Context, r *pb.Record) (*pb.Record, error) {
-	domain := r.Domain
-	if !strings.HasSuffix(domain, ".") {
-		domain += "."
+	record := pb.Record{
+		Type:   r.Type,
+		Domain: r.Domain,
+		Ip:     r.Ip,
+		Ttl:    r.Ttl,
 	}
 
-	ttl := r.Ttl
-	if ttl == 0 {
-		ttl = 604800
+	if !strings.HasSuffix(record.Domain, ".") {
+		record.Domain += "."
+	}
+
+	if record.Ttl == 0 {
+		record.Ttl = 604800
 	}
 
 	err := srv.st.Put(storage.Record{
-		Type:   r.Type,
-		Domain: domain,
-		IP:     r.Ip,
-		TTL:    ttl,
+		Type:   record.Type,
+		Domain: record.Domain,
+		IP:     record.Ip,
+		TTL:    record.Ttl,
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	return srv.GetRecord(ctx, r)
+	return srv.GetRecord(ctx, &record)
 }
 
 func (srv *Server) DeleteRecord(_ context.Context, r *pb.Record) (*emptypb.Empty, error) {
@@ -115,11 +120,11 @@ func (srv *Server) ListenAndServe() error {
 }
 
 func New(opts ...Option) *Server {
-	var srv Server
+	srv := &Server{Addr: ":8080"}
 
 	for _, opt := range opts {
-		opt(&srv)
+		opt(srv)
 	}
 
-	return &srv
+	return srv
 }

@@ -33,7 +33,8 @@ linters:
     - revive
 
 skip-dirs:
-  - ui
+  - pb
+  - .github
 
 issues:
   exclude:

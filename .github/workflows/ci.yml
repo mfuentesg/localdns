@@ -30,4 +30,4 @@ jobs:
 
       - name: Run tests
         run: |
-          go test -race -bench=".*" -benchmem -covermode=atomic ./...
+          go test -race -bench=".*" -benchmem -covermode=atomic $(go list ./... | grep -v pb)

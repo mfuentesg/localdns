@@ -77,7 +77,6 @@ WantedBy=multi-user.target
 
 - [x] Add persistent layer
 - [x] Add support for A records
-- [ ] Add support for AAAA records
 - [x] Support for IPv4
 - [ ] Support for IPv6
 - [ ] Prometheus metrics

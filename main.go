@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,6 +12,7 @@ import (
 	"github.com/mfuentesg/localdns/server/dns"
 	"github.com/mfuentesg/localdns/server/grpc"
 	"github.com/mfuentesg/localdns/storage/sqlite"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -40,6 +42,12 @@ func main() {
 		s := grpc.New(grpc.WithStorage(db), grpc.WithAddr(":8080"))
 		log.Printf("grpc server started at %s\n", s.Addr)
 		errs <- s.ListenAndServe()
+	}()
+
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		log.Println("prometheus server started at :9090")
+		errs <- http.ListenAndServe(":9090", nil)
 	}()
 
 	go func() {

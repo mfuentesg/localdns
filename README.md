@@ -78,15 +78,13 @@ WantedBy=multi-user.target
 - [x] Add persistent layer
 - [x] Add support for A records
 - [x] Support for IPv4
-- [ ] Support for IPv6
 - [ ] Prometheus metrics
 - [x] go-releaser binary creation
 - [x] GitHub actions pipeline
 - [x] Add gRPC API
 - [ ] Logging strategy
 - [ ] Configuration layer
-
-## Roadmap
-
 - [ ] Provide a UI for easy management
 - [ ] User access and permissions for UI
+- [ ] DNS over https support
+- [ ] DNS over tls support

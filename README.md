@@ -21,7 +21,7 @@ If you want to run your own instance of `localDNS`, go to the [releases page](ht
 
 ## Systemd
 
-This service can be installed as systemd service. Use the following snippets as base for your configuration.
+This service can be installed as systemd service. Use the following snippets as base for your own configuration.
 These files assume that you have installed `localDNS` at `/opt/localdns/` directory and them will check for `/opt/localdns/localdns` binary file.
 
 **/etc/systemd/system/localdns.service**

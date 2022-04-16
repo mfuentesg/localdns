@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,9 +10,13 @@ import (
 	"github.com/mfuentesg/localdns/server/dns"
 	"github.com/mfuentesg/localdns/server/grpc"
 	"github.com/mfuentesg/localdns/storage/sqlite"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
+	log.SetFormatter(new(log.JSONFormatter))
+	log.SetLevel(log.InfoLevel)
+
 	db, err := sqlite.New()
 	if err != nil {
 		log.Fatal(err)
@@ -21,24 +24,27 @@ func main() {
 
 	defer db.Close()
 
-	h := handler.New(db, handler.WithDNSServer("8.8.8.8:53"))
 	errs := make(chan error, 2)
 
 	go func() {
-		s := dns.New(h, dns.WithAddr(":8053"), dns.WithProtocol("udp"))
-		log.Printf("udp: dns server started at %s\n", s.Addr)
+		protocol := "udp"
+		h := handler.New(db, handler.WithDNSServer("8.8.8.8:53"), handler.WithProtocol(protocol))
+		s := dns.New(h, dns.WithAddr(":8053"), dns.WithProtocol(protocol))
+		log.WithFields(log.Fields{"protocol": protocol, "addr": s.Addr}).Info("dns server started")
 		errs <- s.ListenAndServe()
 	}()
 
 	go func() {
-		s := dns.New(h, dns.WithAddr(":8053"), dns.WithProtocol("tcp"))
-		log.Printf("tcp: dns server started at %s\n", s.Addr)
+		protocol := "tcp"
+		h := handler.New(db, handler.WithDNSServer("8.8.8.8:53"), handler.WithProtocol(protocol))
+		s := dns.New(h, dns.WithAddr(":8053"), dns.WithProtocol(protocol))
+		log.WithFields(log.Fields{"protocol": protocol, "addr": s.Addr}).Info("dns server started")
 		errs <- s.ListenAndServe()
 	}()
 
 	go func() {
-		s := grpc.New(grpc.WithStorage(db), grpc.WithAddr(":8080"))
-		log.Printf("grpc server started at %s\n", s.Addr)
+		s := grpc.New(db, grpc.WithAddr(":8080"))
+		log.WithField("addr", s.Addr).Info("grpc server started")
 		errs <- s.ListenAndServe()
 	}()
 
@@ -47,5 +53,5 @@ func main() {
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 		errs <- fmt.Errorf("%s", <-c)
 	}()
-	log.Printf("localdns: service %s\n", <-errs)
+	log.Errorf("localdns: service %s", <-errs)
 }

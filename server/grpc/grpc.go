@@ -7,6 +7,7 @@ import (
 
 	"github.com/mfuentesg/localdns/pb"
 	"github.com/mfuentesg/localdns/storage"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -18,12 +19,6 @@ type Server struct {
 	pb.DnsServiceServer
 	st   storage.Storage
 	Addr string
-}
-
-func WithStorage(st storage.Storage) Option {
-	return func(s *Server) {
-		s.st = st
-	}
 }
 
 func WithAddr(addr string) Option {
@@ -55,16 +50,28 @@ func (srv *Server) PutRecord(ctx context.Context, r *pb.Record) (*pb.Record, err
 		TTL:    record.Ttl,
 	})
 
+	logEntry := log.WithFields(log.Fields{
+		"domain": record.Domain,
+		"type":   record.Type,
+		"ip":     record.Ip,
+	})
+
 	if err != nil {
+		logEntry.Error("unable to store data")
 		return nil, err
 	}
 
+	logEntry.Info("record created")
 	return srv.GetRecord(ctx, &record)
 }
 
 func (srv *Server) DeleteRecord(_ context.Context, r *pb.Record) (*emptypb.Empty, error) {
 	err := srv.st.Delete(r.Domain)
+	logEntry := log.WithFields(log.Fields{
+		"domain": r.Domain,
+	})
 	if err != nil {
+		logEntry.Error("unable to delete the record")
 		return nil, err
 	}
 	return new(emptypb.Empty), nil
@@ -74,6 +81,7 @@ func (srv *Server) ListRecords(_ context.Context, _ *emptypb.Empty) (*pb.RecordL
 	records, err := srv.st.List()
 
 	if err != nil {
+		log.Error("unable to retrieve records")
 		return nil, err
 	}
 
@@ -92,10 +100,16 @@ func (srv *Server) ListRecords(_ context.Context, _ *emptypb.Empty) (*pb.RecordL
 
 func (srv *Server) GetRecord(_ context.Context, r *pb.Record) (*pb.Record, error) {
 	record, err := srv.st.Get(r.Domain)
+	logEntry := log.WithFields(log.Fields{
+		"domain": r.Domain,
+	})
+
 	if err != nil {
+		logEntry.Error("unable to retrieve the record")
 		return nil, err
 	}
 
+	logEntry.Info("record retrieved")
 	return &pb.Record{
 		Type:   record.Type,
 		Domain: record.Domain,
@@ -119,8 +133,8 @@ func (srv *Server) ListenAndServe() error {
 	return server.Serve(lis)
 }
 
-func New(opts ...Option) *Server {
-	srv := &Server{Addr: ":8080"}
+func New(db storage.Storage, opts ...Option) *Server {
+	srv := &Server{Addr: ":8080", st: db}
 
 	for _, opt := range opts {
 		opt(srv)

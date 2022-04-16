@@ -3,13 +3,13 @@ package handler
 import (
 	"errors"
 	"io/ioutil"
-	"log"
 	"net"
 	"testing"
 
 	"github.com/coredns/coredns/plugin/pkg/dnstest"
 	"github.com/mfuentesg/localdns/storage"
 	"github.com/miekg/dns"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 

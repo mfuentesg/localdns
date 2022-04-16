@@ -101,9 +101,7 @@ func (srv *Server) ListRecords(_ context.Context, _ *emptypb.Empty) (*pb.RecordL
 func (srv *Server) GetRecord(_ context.Context, r *pb.Record) (*pb.Record, error) {
 	record, err := srv.st.Get(r.Domain)
 	logEntry := log.WithFields(log.Fields{
-		"domain": record.Domain,
-		"type":   record.Type,
-		"ip":     record.IP,
+		"domain": r.Domain,
 	})
 
 	if err != nil {

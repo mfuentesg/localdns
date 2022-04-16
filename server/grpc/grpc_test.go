@@ -47,24 +47,19 @@ func (fs *fakeStorage) List() ([]*storage.Record, error) {
 }
 
 func TestNew(t *testing.T) {
-	s := New()
+	s := New(nil)
 	assert.IsType(t, new(Server), s)
 	assert.Equal(t, ":8080", s.Addr)
 	assert.Nil(t, s.st)
 }
 
 func TestWithAddr(t *testing.T) {
-	s := New(WithAddr(":9090"))
+	s := New(nil, WithAddr(":9090"))
 	assert.Equal(t, ":9090", s.Addr)
 }
 
-func TestWithStorage(t *testing.T) {
-	s := New(WithStorage(new(fakeStorage)))
-	assert.NotNil(t, s.st)
-}
-
 func TestServer_DeleteRecord(t *testing.T) {
-	s := New(WithStorage(new(fakeStorage)))
+	s := New(new(fakeStorage))
 
 	t.Run("storage failure", func(tt *testing.T) {
 		_, err := s.DeleteRecord(context.Background(), &pb.Record{
@@ -84,7 +79,7 @@ func TestServer_DeleteRecord(t *testing.T) {
 }
 
 func TestServer_GetRecord(t *testing.T) {
-	s := New(WithStorage(new(fakeStorage)))
+	s := New(new(fakeStorage))
 
 	t.Run("error on storage", func(tt *testing.T) {
 		record, err := s.GetRecord(context.Background(), &pb.Record{
@@ -110,7 +105,7 @@ func TestServer_GetRecord(t *testing.T) {
 }
 
 func TestServer_PutRecord(t *testing.T) {
-	s := New(WithStorage(new(fakeStorage)))
+	s := New(new(fakeStorage))
 
 	t.Run("storage failure", func(tt *testing.T) {
 		record, err := s.PutRecord(context.Background(), &pb.Record{
@@ -135,7 +130,7 @@ func TestServer_PutRecord(t *testing.T) {
 }
 
 func TestServer_ListRecords(t *testing.T) {
-	s := New(WithStorage(new(fakeStorage)))
+	s := New(new(fakeStorage))
 
 	list, err := s.ListRecords(context.Background(), nil)
 

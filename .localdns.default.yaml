@@ -1,21 +1,20 @@
 ---
 
 # specify the external dns to resolve unknown domain names
-forward_to: 8.8.8.8:53
-
-# enable or disable local dns features
-features:
-  udp_enable: true
-  tcp_enabled: true
-  grpc_enabled: true
-  prometheus_enabled: true
+remote_server: 8.8.8.8:53
 
 # configuration per services exposed by localdns
 servers:
-  dns:
+  dns_tcp:
     addr: :8053
+    enabled: true
+  dns_udp:
+    addr: :8053
+    enabled: true
   grpc:
     addr: :8080
+    enabled: true
   prometheus:
     addr: :9090
+    enabled: true
 

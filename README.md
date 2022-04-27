@@ -86,8 +86,8 @@ WantedBy=multi-user.target
 - [x] go-releaser binary creation
 - [x] GitHub actions pipeline
 - [x] Add gRPC API
-- [ ] Logging strategy
-- [ ] Configuration layer
+- [x] Logging strategy
+- [x] Configuration layer
 - [ ] Provide a UI for easy management
 - [ ] User access and permissions for UI
 - [ ] DNS over https support

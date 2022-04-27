@@ -3,10 +3,12 @@ package grpc
 import (
 	"context"
 	"errors"
+	"io/ioutil"
 	"testing"
 
 	"github.com/mfuentesg/localdns/pb"
 	"github.com/mfuentesg/localdns/storage"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -60,6 +62,7 @@ func TestWithAddr(t *testing.T) {
 
 func TestServer_DeleteRecord(t *testing.T) {
 	s := New(new(fakeStorage))
+	log.SetOutput(ioutil.Discard)
 
 	t.Run("storage failure", func(tt *testing.T) {
 		_, err := s.DeleteRecord(context.Background(), &pb.Record{
@@ -118,6 +121,8 @@ func TestServer_PutRecord(t *testing.T) {
 	})
 
 	t.Run("append `.` as part of the domain", func(tt *testing.T) {
+		log.SetOutput(ioutil.Discard)
+
 		record, err := s.PutRecord(context.Background(), &pb.Record{
 			Type:   "A",
 			Domain: "www.my-domain.com",

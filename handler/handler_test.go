@@ -56,6 +56,13 @@ func TestWithDNSServer(t *testing.T) {
 	assert.Equal(t, dnsServer, h.dnsServer)
 }
 
+func TestWithProtocol(t *testing.T) {
+	protocol := "fake"
+	h := New(new(fakeStorage), WithProtocol(protocol))
+
+	assert.Equal(t, protocol, h.protocol)
+}
+
 func TestHandler_ServeDNS(t *testing.T) {
 	log.SetOutput(ioutil.Discard)
 

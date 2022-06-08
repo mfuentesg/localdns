@@ -8,8 +8,10 @@ option go_package = "./;pb";
 message Record {
   string type = 1;
   string domain = 3;
-  string ip = 4;
+  string ipv4 = 4;
   int32 ttl = 5;
+  string id = 6;
+  string ipv6 = 7;
 }
 
 message RecordList {

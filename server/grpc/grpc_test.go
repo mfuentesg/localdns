@@ -16,27 +16,33 @@ type fakeStorage struct {
 	storage.Storage
 }
 
+const (
+	invalidRecordID = "7af2bc99-600d-468d-b1a8-da2a72ba8538"
+	validRecordID   = "9964f6cb-29f4-41bd-9770-4c175098206c"
+)
+
 func (fs *fakeStorage) Get(identifier string) (*storage.Record, error) {
-	if identifier == "unknown" {
+	if identifier == invalidRecordID {
 		return nil, errors.New("unhandled error")
 	}
 
 	return &storage.Record{
+		ID:     validRecordID,
 		Type:   "A",
-		Domain: identifier,
-		IP:     "192.168.1.10",
+		Domain: "www.my-domain.com.",
+		IPv4:   "192.168.1.10",
 	}, nil
 }
 
-func (fs *fakeStorage) Put(r storage.Record) error {
+func (fs *fakeStorage) Put(r storage.Record) (string, error) {
 	if r.Type == "AAAA" {
-		return errors.New("unhandled error")
+		return "", errors.New("unhandled error")
 	}
-	return nil
+	return validRecordID, nil
 }
 
 func (fs *fakeStorage) Delete(identifier string) error {
-	if identifier == "www.delete.com." {
+	if identifier == invalidRecordID {
 		return errors.New("unhandled error")
 	}
 	return nil
@@ -44,7 +50,7 @@ func (fs *fakeStorage) Delete(identifier string) error {
 
 func (fs *fakeStorage) List() ([]*storage.Record, error) {
 	return []*storage.Record{
-		{Type: "A", Domain: "www.fake.com", IP: "10.168.1.1"},
+		{ID: validRecordID, Type: "A", Domain: "www.fake.com", IPv4: "10.168.1.1"},
 	}, nil
 }
 
@@ -66,7 +72,7 @@ func TestServer_DeleteRecord(t *testing.T) {
 
 	t.Run("storage failure", func(tt *testing.T) {
 		_, err := s.DeleteRecord(context.Background(), &pb.Record{
-			Domain: "www.delete.com.",
+			Id: invalidRecordID,
 		})
 
 		assert.Error(tt, err)
@@ -74,7 +80,7 @@ func TestServer_DeleteRecord(t *testing.T) {
 
 	t.Run("deleted correctly", func(tt *testing.T) {
 		_, err := s.DeleteRecord(context.Background(), &pb.Record{
-			Domain: "www.fake.com.",
+			Id: validRecordID,
 		})
 
 		assert.Nil(tt, err)
@@ -86,7 +92,7 @@ func TestServer_GetRecord(t *testing.T) {
 
 	t.Run("error on storage", func(tt *testing.T) {
 		record, err := s.GetRecord(context.Background(), &pb.Record{
-			Domain: "unknown",
+			Id: invalidRecordID,
 		})
 
 		assert.NotNil(tt, err)
@@ -96,13 +102,13 @@ func TestServer_GetRecord(t *testing.T) {
 
 	t.Run("valid storage response", func(tt *testing.T) {
 		record, err := s.GetRecord(context.Background(), &pb.Record{
-			Domain: "www.my-domain.com.",
+			Id: validRecordID,
 		})
 
 		assert.Nil(tt, err)
 		assert.NoError(tt, err)
 		assert.NotNil(tt, record)
-		assert.Equal(tt, "192.168.1.10", record.Ip)
+		assert.Equal(tt, "192.168.1.10", record.Ipv4)
 		assert.Equal(tt, "www.my-domain.com.", record.Domain)
 	})
 }
@@ -131,6 +137,7 @@ func TestServer_PutRecord(t *testing.T) {
 		assert.Nil(tt, err)
 		assert.NotNil(tt, record)
 		assert.Equal(tt, "www.my-domain.com.", record.Domain)
+		assert.Equal(tt, validRecordID, record.Id)
 	})
 }
 

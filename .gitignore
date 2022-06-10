@@ -7,3 +7,4 @@ dist/
 tmp
 localdns.db
 .localdns.yaml
+localdns

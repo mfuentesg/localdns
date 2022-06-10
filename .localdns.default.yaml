@@ -3,6 +3,10 @@
 # specify the external dns to resolve unknown domain names
 remote_server: 8.8.8.8:53
 
+# database file name
+database:
+  dsn: localdns.db
+
 # configuration per services exposed by localdns
 servers:
   dns_tcp:

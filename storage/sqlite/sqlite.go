@@ -13,40 +13,13 @@ type SQLite struct {
 	db *sqlx.DB
 }
 
-func (sq *SQLite) prepareDB() error {
-	query := `
-		create table if not exists records
-		(
-			id         varchar(36) default (lower(hex(randomblob(4)) || '-' || hex(randomblob(2))
-				|| '-' || '4' || substr(hex(randomblob(2)), 2) || '-'
-				|| substr('AB89', 1 + (abs(random()) % 4), 1) ||
-												  substr(hex(randomblob(2)), 2) || '-' || hex(randomblob(6)))) primary key,
-			domain     text,
-			ipv4       varchar(15),
-			ipv6       varchar(39),
-			created_at datetime    default CURRENT_TIMESTAMP,
-			ttl        integer     default 604800,
-			type       varchar(10)
-		);
-	`
-
-	_, err := sq.db.Exec(query)
-	return err
-}
-
-func New() (*SQLite, error) {
-	db, err := sqlx.Open("sqlite", "localdns.db")
+func New(dsn string) (*SQLite, error) {
+	db, err := sqlx.Open("sqlite", dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	sq := &SQLite{db: db}
-
-	if err := sq.prepareDB(); err != nil {
-		return nil, err
-	}
-
-	return sq, nil
+	return &SQLite{db: db}, nil
 }
 
 func (sq *SQLite) Put(r storage.Record) (string, error) {

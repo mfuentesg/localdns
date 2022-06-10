@@ -29,7 +29,7 @@ func (fs *fakeStorage) Get(identifier string) (*storage.Record, error) {
 	return &storage.Record{
 		Type:   "A",
 		Domain: identifier,
-		IP:     "192.168.1.10",
+		IPv4:   "192.168.1.10",
 		TTL:    1000,
 	}, nil
 }

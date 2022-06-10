@@ -13,50 +13,30 @@ type SQLite struct {
 	db *sqlx.DB
 }
 
-func (sq *SQLite) prepareDB() error {
-	query := `create table if not exists records(
-		domain     text primary key,
-		ip         text,
-		created_at datetime default CURRENT_TIMESTAMP,
-		ttl        integer  default 604800,
-		type       text
-	)`
-
-	_, err := sq.db.Exec(query)
-	return err
-}
-
-func New() (*SQLite, error) {
-	db, err := sqlx.Open("sqlite", "localdns.db")
+func New(dsn string) (*SQLite, error) {
+	db, err := sqlx.Open("sqlite", dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	sq := &SQLite{db: db}
-
-	if err := sq.prepareDB(); err != nil {
-		return nil, err
-	}
-
-	return sq, nil
+	return &SQLite{db: db}, nil
 }
 
-func (sq *SQLite) Put(r storage.Record) error {
+func (sq *SQLite) Put(r storage.Record) (string, error) {
 	query := `insert or replace into records(
-    	domain, ip, ttl, type
-	) values(?, ?, ?, ?)`
+    	domain, ipv4, ipv6, ttl, type
+	) values(?, ?, ?, ?, ?) returning id`
 
-	_, err := sq.db.Exec(query, r.Domain, r.IP, r.TTL, r.Type)
-
-	return err
+	var id string
+	err := sq.db.QueryRow(query, r.Domain, r.IPv4, r.IPv6, r.TTL, r.Type).Scan(&id)
+	return id, err
 }
 
 func (sq *SQLite) Get(identifier string) (*storage.Record, error) {
-	query := `select domain, ip, ttl, type from records where domain = ?`
-	row := sq.db.QueryRow(query, identifier)
-
 	var record storage.Record
-	err := row.Scan(&record.Domain, &record.IP, &record.TTL, &record.Type)
+	query := `select id, domain, ipv4, ipv6, ttl, type from records where id = ?`
+	err := sq.db.QueryRow(query, identifier).
+		Scan(&record.ID, &record.Domain, &record.IPv4, &record.IPv6, &record.TTL, &record.Type)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, storage.ErrRecordNotFound
@@ -70,7 +50,7 @@ func (sq *SQLite) Get(identifier string) (*storage.Record, error) {
 }
 
 func (sq *SQLite) Delete(identifier string) error {
-	query := `delete from records where domain = ?`
+	query := `delete from records where id = ?`
 	_, err := sq.db.Exec(query, identifier)
 
 	return err
@@ -78,7 +58,7 @@ func (sq *SQLite) Delete(identifier string) error {
 
 func (sq *SQLite) List() ([]*storage.Record, error) {
 	var records []*storage.Record
-	query := `select domain, ip, ttl, type from records`
+	query := `select id, domain, ipv4, ipv6, ttl, type from records`
 	if err := sq.db.Select(&records, query); err != nil {
 		return nil, err
 	}

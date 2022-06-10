@@ -1,11 +1,17 @@
 package main
 
 import (
+	"database/sql"
+	"embed"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/golang-migrate/migrate/v4"
+	sq "github.com/golang-migrate/migrate/v4/database/sqlite"
+	"github.com/golang-migrate/migrate/v4/source/httpfs"
 	"github.com/mfuentesg/localdns/handler"
 	"github.com/mfuentesg/localdns/server/dns"
 	"github.com/mfuentesg/localdns/server/grpc"
@@ -13,6 +19,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
+
+//go:embed migrations
+var migrations embed.FS
 
 func loadConfig() error {
 	viper.AddConfigPath(".")
@@ -28,11 +37,38 @@ func loadConfig() error {
 	viper.SetDefault("servers.grpc.enabled", true)
 	viper.SetDefault("servers.prometheus.addr", ":9090")
 	viper.SetDefault("servers.prometheus.enabled", true)
+	viper.SetDefault("database.dsn", "localdns.db")
 
 	_ = viper.ReadInConfig()
 	_ = viper.MergeInConfig()
 
 	return viper.WriteConfigAs(".localdns.yaml")
+}
+
+func applyMigrations() error {
+	db, err := sql.Open("sqlite", viper.GetString("database.dsn"))
+	if err != nil {
+		return err
+	}
+	sourceDriver, err := httpfs.New(http.FS(migrations), "migrations")
+	if err != nil {
+		return err
+	}
+	target, err := sq.WithInstance(db, new(sq.Config))
+	if err != nil {
+		return err
+	}
+	m, err := migrate.NewWithInstance(
+		"httpfs", sourceDriver, "sqlite", target)
+	if err != nil {
+		return err
+	}
+	err = m.Up()
+	if err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+	defer db.Close()
+	return sourceDriver.Close()
 }
 
 func main() {
@@ -43,7 +79,11 @@ func main() {
 		log.WithField("reason", err).Fatal("unable to read the config file")
 	}
 
-	db, err := sqlite.New()
+	if err := applyMigrations(); err != nil {
+		log.WithField("reason", err).Fatal("unable to apply migrations")
+	}
+
+	db, err := sqlite.New(viper.GetString("database.dsn"))
 	if err != nil {
 		log.WithField("reason", err).Fatal("unable to load db")
 	}

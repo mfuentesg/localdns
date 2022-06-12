@@ -13,7 +13,11 @@ var (
 	ErrRecordAlreadyExists = errors.New("record already exists")
 )
 
-const SQLITE_CONSTRAINT_UNIQUE = 2067
+// SQLite constraint codes
+
+const (
+	ConstraintUnique = 2067
+)
 
 type SQLite struct {
 	db *sqlx.DB
@@ -37,7 +41,7 @@ func (sq *SQLite) Put(r storage.Record) (string, error) {
 	err := sq.db.QueryRow(query, r.Domain, r.IPv4, r.IPv6, r.TTL, r.Type).Scan(&id)
 
 	errCode := err.(*sqlite.Error).Code()
-	if errCode == SQLITE_CONSTRAINT_UNIQUE {
+	if errCode == ConstraintUnique {
 		return "", ErrRecordAlreadyExists
 	}
 	return id, err

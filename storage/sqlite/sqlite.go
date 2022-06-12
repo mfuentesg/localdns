@@ -14,9 +14,10 @@ var (
 )
 
 // SQLite constraint codes
+// Reference: https://www.sqlite.org/rescode.html#pve
 
 const (
-	ConstraintUnique = 2067
+	ErrCodeConstraintUnique = 2067
 )
 
 type SQLite struct {
@@ -41,7 +42,7 @@ func (sq *SQLite) Put(r storage.Record) (string, error) {
 	err := sq.db.QueryRow(query, r.Domain, r.IPv4, r.IPv6, r.TTL, r.Type).Scan(&id)
 
 	errCode := err.(*sqlite.Error).Code()
-	if errCode == ConstraintUnique {
+	if errCode == ErrCodeConstraintUnique {
 		return "", ErrRecordAlreadyExists
 	}
 	return id, err

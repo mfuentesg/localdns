@@ -61,7 +61,7 @@ func (srv *Server) PutRecord(ctx context.Context, r *pb.Record) (*pb.Record, err
 	})
 
 	if err != nil {
-		logEntry.Error("unable to store data")
+		logEntry.WithField("reason", err).Error("unable to store data")
 		return nil, err
 	}
 

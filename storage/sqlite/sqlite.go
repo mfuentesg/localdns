@@ -6,8 +6,14 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/mfuentesg/localdns/storage"
-	_ "modernc.org/sqlite" // sqlite driver
+	"modernc.org/sqlite"
 )
+
+var (
+	ErrRecordAlreadyExists = errors.New("record already exists")
+)
+
+const SQLITE_CONSTRAINT_UNIQUE = 2067
 
 type SQLite struct {
 	db *sqlx.DB
@@ -23,12 +29,17 @@ func New(dsn string) (*SQLite, error) {
 }
 
 func (sq *SQLite) Put(r storage.Record) (string, error) {
-	query := `insert or replace into records(
+	query := `insert into records(
     	domain, ipv4, ipv6, ttl, type
 	) values(?, ?, ?, ?, ?) returning id`
 
 	var id string
 	err := sq.db.QueryRow(query, r.Domain, r.IPv4, r.IPv6, r.TTL, r.Type).Scan(&id)
+
+	errCode := err.(*sqlite.Error).Code()
+	if errCode == SQLITE_CONSTRAINT_UNIQUE {
+		return "", ErrRecordAlreadyExists
+	}
 	return id, err
 }
 

@@ -9,10 +9,6 @@ import (
 	"modernc.org/sqlite"
 )
 
-var (
-	ErrRecordAlreadyExists = errors.New("record already exists")
-)
-
 // SQLite constraint codes
 // Reference: https://www.sqlite.org/rescode.html#pve
 
@@ -43,7 +39,7 @@ func (sq *SQLite) Put(r storage.Record) (string, error) {
 
 	errCode := err.(*sqlite.Error).Code()
 	if errCode == ErrCodeConstraintUnique {
-		return "", ErrRecordAlreadyExists
+		return "", storage.ErrRecordAlreadyExists
 	}
 	return id, err
 }

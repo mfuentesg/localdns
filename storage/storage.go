@@ -5,7 +5,8 @@ import (
 )
 
 var (
-	ErrRecordNotFound = errors.New("localdns: record not found")
+	ErrRecordNotFound      = errors.New("localdns: record not found")
+	ErrRecordAlreadyExists = errors.New("localdns: record already exists")
 )
 
 type Record struct {

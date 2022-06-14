@@ -37,8 +37,7 @@ func (sq *SQLite) Put(r storage.Record) (string, error) {
 	var id string
 	err := sq.db.QueryRow(query, r.Domain, r.IPv4, r.IPv6, r.TTL, r.Type).Scan(&id)
 
-	errCode := err.(*sqlite.Error).Code()
-	if errCode == ErrCodeConstraintUnique {
+	if sqlErr, ok := err.(*sqlite.Error); ok && sqlErr.Code() == ErrCodeConstraintUnique {
 		return "", storage.ErrRecordAlreadyExists
 	}
 	return id, err

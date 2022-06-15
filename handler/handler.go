@@ -62,9 +62,12 @@ func (h *Handler) buildMessage(m *dns.Msg) (*dns.Msg, error) {
 		return nil, errors.New("unsupported dns type")
 	}
 
-	record, err := h.storage.Get(domain)
-
-	if errors.Is(err, storage.ErrRecordNotFound) {
+	records, err := h.storage.GetByDomain(domain)
+	if err != nil {
+		logEntry.WithField("reason", err).Error("unable to get record from database")
+		return nil, err
+	}
+	if len(records) == 0 {
 		logEntry.Info("unregistered domain")
 
 		forwardedMessage, err := h.forwardQuery(m)
@@ -76,25 +79,23 @@ func (h *Handler) buildMessage(m *dns.Msg) (*dns.Msg, error) {
 		return forwardedMessage, err
 	}
 
-	if err != nil {
-		logEntry.WithField("reason", err).Error("unable to get record from database")
-		return nil, err
-	}
-
 	logEntry.Info("domain found")
 
 	var message dns.Msg
 	message.SetReply(m)
 	message.Authoritative = true
-	message.Answer = append(message.Answer, &dns.A{
-		Hdr: dns.RR_Header{
-			Name:   domain,
-			Rrtype: dns.TypeA,
-			Class:  dns.ClassINET,
-			Ttl:    60,
-		},
-		A: net.ParseIP(record.IPv4),
-	})
+
+	for _, record := range records {
+		message.Answer = append(message.Answer, &dns.A{
+			Hdr: dns.RR_Header{
+				Name:   domain,
+				Rrtype: dns.TypeA,
+				Class:  dns.ClassINET,
+				Ttl:    60,
+			},
+			A: net.ParseIP(record.IPv4),
+		})
+	}
 
 	return &message, nil
 }

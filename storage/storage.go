@@ -21,6 +21,7 @@ type Record struct {
 type Storage interface {
 	Put(r Record) (string, error)
 	Get(identifier string) (*Record, error)
+	GetByDomain(domain string) ([]*Record, error)
 	Delete(identifier string) error
 	List() ([]*Record, error)
 	Close() error

@@ -32,7 +32,7 @@ func New(dsn string) (*SQLite, error) {
 func (sq *SQLite) Put(r storage.Record) (string, error) {
 	query := `insert into records(
     	domain, ipv4, ipv6, ttl, type
-	) values(?, ?, ?, ?, ?) returning id`
+	) values(?, nullif(?, ''), nullif(?, ''), ?, ?) returning id`
 
 	var id string
 	err := sq.db.QueryRow(query, r.Domain, r.IPv4, r.IPv6, r.TTL, r.Type).Scan(&id)
@@ -45,7 +45,7 @@ func (sq *SQLite) Put(r storage.Record) (string, error) {
 
 func (sq *SQLite) Get(identifier string) (*storage.Record, error) {
 	var record storage.Record
-	query := `select id, domain, ipv4, ipv6, ttl, type from records where id = ?`
+	query := `select id, domain, ifnull(ipv4, '') as ipv4, ifnull(ipv6, '') as ipv6, ttl, type from records where id = ?`
 	err := sq.db.QueryRow(query, identifier).
 		Scan(&record.ID, &record.Domain, &record.IPv4, &record.IPv6, &record.TTL, &record.Type)
 
@@ -60,6 +60,16 @@ func (sq *SQLite) Get(identifier string) (*storage.Record, error) {
 	return &record, nil
 }
 
+func (sq *SQLite) GetByDomain(domain string) ([]*storage.Record, error) {
+	var records []*storage.Record
+
+	query := `select id, domain, ifnull(ipv4, '') as ipv4, ifnull(ipv6, '') as ipv6, ttl, type from records where domain = ?`
+	if err := sq.db.Select(&records, query, domain); err != nil {
+		return nil, err
+	}
+	return records, nil
+}
+
 func (sq *SQLite) Delete(identifier string) error {
 	query := `delete from records where id = ?`
 	_, err := sq.db.Exec(query, identifier)
@@ -69,7 +79,7 @@ func (sq *SQLite) Delete(identifier string) error {
 
 func (sq *SQLite) List() ([]*storage.Record, error) {
 	var records []*storage.Record
-	query := `select id, domain, ipv4, ipv6, ttl, type from records`
+	query := `select id, domain, ifnull(ipv4, '') as ipv4, ifnull(ipv6, '') as ipv6, ttl, type from records`
 	if err := sq.db.Select(&records, query); err != nil {
 		return nil, err
 	}

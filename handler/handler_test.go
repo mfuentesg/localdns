@@ -34,6 +34,25 @@ func (fs *fakeStorage) Get(identifier string) (*storage.Record, error) {
 	}, nil
 }
 
+func (fs *fakeStorage) GetByDomain(identifier string) ([]*storage.Record, error) {
+	if identifier == dns.Fqdn("www.google.com") {
+		return nil, errors.New("fake error")
+	}
+
+	if identifier == dns.Fqdn("www.fake.com") {
+		return []*storage.Record{}, nil
+	}
+
+	return []*storage.Record{
+		{
+			Type:   "A",
+			Domain: identifier,
+			IPv4:   "192.168.1.10",
+			TTL:    1000,
+		},
+	}, nil
+}
+
 type fakeDNSRW struct {
 	dns.ResponseWriter
 }

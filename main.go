@@ -71,7 +71,7 @@ func applyMigrations() error {
 	return sourceDriver.Close()
 }
 
-func main() {
+func init() {
 	log.SetFormatter(new(log.JSONFormatter))
 	log.SetLevel(log.InfoLevel)
 
@@ -82,7 +82,9 @@ func main() {
 	if err := applyMigrations(); err != nil {
 		log.WithField("reason", err).Fatal("unable to apply migrations")
 	}
+}
 
+func main() {
 	db, err := sqlite.New(viper.GetString("database.dsn"))
 	if err != nil {
 		log.WithField("reason", err).Fatal("unable to load db")
@@ -98,10 +100,9 @@ func main() {
 
 	if udpEnabled {
 		go func() {
-			protocol := "udp"
-			h := handler.New(db, handler.WithDNSServer(viper.GetString("remote_server")), handler.WithProtocol(protocol))
-			s := dns.New(h, dns.WithAddr(viper.GetString("servers.dns_udp.addr")), dns.WithProtocol(protocol))
-			log.WithFields(log.Fields{"protocol": protocol, "addr": s.Addr}).Info("dns server started")
+			h := handler.New(db, handler.WithDNSServer(viper.GetString("remote_server")))
+			s := dns.New(h, dns.WithAddr(viper.GetString("servers.dns_udp.addr")))
+			log.WithFields(log.Fields{"protocol": "udp", "addr": s.Addr}).Info("dns server started")
 			errs <- s.ListenAndServe()
 		}()
 	}
@@ -132,6 +133,6 @@ func main() {
 		}()
 		log.Errorf("localdns: service %s", <-errs)
 	} else {
-		log.Info("there are not enabled services in config file")
+		log.Error("there are not enabled services in config file")
 	}
 }

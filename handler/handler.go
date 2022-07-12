@@ -29,6 +29,18 @@ func WithProtocol(protocol string) Option {
 	}
 }
 
+func buildRecord(record *storage.Record) dns.RR {
+	return &dns.A{
+		Hdr: dns.RR_Header{
+			Name:   record.Domain,
+			Rrtype: dns.TypeA,
+			Class:  dns.ClassINET,
+			Ttl:    uint32(record.TTL),
+		},
+		A: net.ParseIP(record.IPv4),
+	}
+}
+
 func (h *Handler) forwardQuery(message *dns.Msg) (*dns.Msg, error) {
 	c := &dns.Client{Net: "udp"}
 	conn, err := c.Dial(h.dnsServer)
@@ -70,14 +82,12 @@ func (h *Handler) buildMessage(m *dns.Msg) (*dns.Msg, error) {
 	}
 
 	if len(records) == 0 {
-		logEntry.Info("unregistered domain")
-
 		forwardedMessage, err := h.forwardQuery(m)
 		if err != nil {
 			logEntry.WithField("reason", err).Error("unable to forward query")
 		}
 
-		logEntry.Info("record forwarded successfully")
+		logEntry.Info("record forwarded")
 		return forwardedMessage, err
 	}
 
@@ -88,15 +98,7 @@ func (h *Handler) buildMessage(m *dns.Msg) (*dns.Msg, error) {
 	message.Authoritative = true
 
 	for _, record := range records {
-		message.Answer = append(message.Answer, &dns.A{
-			Hdr: dns.RR_Header{
-				Name:   domain,
-				Rrtype: dns.TypeA,
-				Class:  dns.ClassINET,
-				Ttl:    uint32(record.TTL),
-			},
-			A: net.ParseIP(record.IPv4),
-		})
+		message.Answer = append(message.Answer, buildRecord(record))
 	}
 
 	return &message, nil

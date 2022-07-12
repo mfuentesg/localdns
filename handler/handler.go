@@ -93,7 +93,7 @@ func (h *Handler) buildMessage(m *dns.Msg) (*dns.Msg, error) {
 				Name:   domain,
 				Rrtype: dns.TypeA,
 				Class:  dns.ClassINET,
-				Ttl:    60,
+				Ttl:    uint32(record.TTL),
 			},
 			A: net.ParseIP(record.IPv4),
 		})

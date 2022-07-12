@@ -30,7 +30,7 @@ func WithProtocol(protocol string) Option {
 }
 
 func (h *Handler) forwardQuery(message *dns.Msg) (*dns.Msg, error) {
-	c := &dns.Client{Net: h.protocol}
+	c := &dns.Client{Net: "udp"}
 	conn, err := c.Dial(h.dnsServer)
 
 	if err != nil {
@@ -51,10 +51,11 @@ func (h *Handler) buildMessage(m *dns.Msg) (*dns.Msg, error) {
 	question := m.Question[0]
 	domain := question.Name
 	logEntry := log.WithFields(log.Fields{
-		"dnsType":  question.Qtype,
-		"domain":   domain,
-		"question": question,
-		"protocol": h.protocol,
+		"dnsType":   question.Qtype,
+		"domain":    domain,
+		"question":  question,
+		"protocol":  h.protocol,
+		"dnsServer": h.dnsServer,
 	})
 
 	if question.Qtype != dns.TypeA {
@@ -67,6 +68,7 @@ func (h *Handler) buildMessage(m *dns.Msg) (*dns.Msg, error) {
 		logEntry.WithField("reason", err).Error("unable to get record from database")
 		return nil, err
 	}
+
 	if len(records) == 0 {
 		logEntry.Info("unregistered domain")
 

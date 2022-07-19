@@ -9,6 +9,18 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	allowedQTypes = map[uint16]string{
+		dns.TypeA:    "A",
+		dns.TypeAAAA: "AAAA",
+	}
+
+	qTypesMapping = map[string]uint16{
+		"A":    dns.TypeA,
+		"AAAA": dns.TypeAAAA,
+	}
+)
+
 type Handler struct {
 	storage   storage.Storage
 	dnsServer string
@@ -30,15 +42,36 @@ func WithProtocol(protocol string) Option {
 }
 
 func buildRecord(record *storage.Record) dns.RR {
-	return &dns.A{
-		Hdr: dns.RR_Header{
-			Name:   record.Domain,
-			Rrtype: dns.TypeA,
-			Class:  dns.ClassINET,
-			Ttl:    uint32(record.TTL),
-		},
-		A: net.ParseIP(record.IPv4),
+	qType, ok := qTypesMapping[record.Type]
+	if !ok {
+		return nil
 	}
+
+	if qType == dns.TypeA {
+		return &dns.A{
+			Hdr: dns.RR_Header{
+				Name:   record.Domain,
+				Rrtype: dns.TypeA,
+				Class:  dns.ClassINET,
+				Ttl:    uint32(record.TTL),
+			},
+			A: net.ParseIP(record.IPv4),
+		}
+	}
+
+	return nil
+}
+
+func buildMessage(m *dns.Msg, records []*storage.Record) *dns.Msg {
+	var message dns.Msg
+	message.Authoritative = true
+	message.SetReply(m)
+
+	for _, record := range records {
+		message.Answer = append(message.Answer, buildRecord(record))
+	}
+
+	return &message
 }
 
 func (h *Handler) forwardQuery(message *dns.Msg) (*dns.Msg, error) {
@@ -59,7 +92,7 @@ func (h *Handler) forwardQuery(message *dns.Msg) (*dns.Msg, error) {
 	return response, nil
 }
 
-func (h *Handler) buildMessage(m *dns.Msg) (*dns.Msg, error) {
+func (h *Handler) handleQuery(m *dns.Msg) (*dns.Msg, error) {
 	question := m.Question[0]
 	domain := question.Name
 	logEntry := log.WithFields(log.Fields{
@@ -70,7 +103,7 @@ func (h *Handler) buildMessage(m *dns.Msg) (*dns.Msg, error) {
 		"dnsServer": h.dnsServer,
 	})
 
-	if question.Qtype != dns.TypeA {
+	if _, ok := allowedQTypes[question.Qtype]; !ok {
 		logEntry.Info("unsupported dns type")
 		return nil, errors.New("unsupported dns type")
 	}
@@ -85,28 +118,20 @@ func (h *Handler) buildMessage(m *dns.Msg) (*dns.Msg, error) {
 		forwardedMessage, err := h.forwardQuery(m)
 		if err != nil {
 			logEntry.WithField("reason", err).Error("unable to forward query")
+			return nil, err
 		}
 
 		logEntry.Info("record forwarded")
-		return forwardedMessage, err
+		return forwardedMessage, nil
 	}
 
 	logEntry.Info("domain found")
 
-	var message dns.Msg
-	message.SetReply(m)
-	message.Authoritative = true
-
-	for _, record := range records {
-		message.Answer = append(message.Answer, buildRecord(record))
-	}
-
-	return &message, nil
+	return buildMessage(m, records), nil
 }
 
 func (h *Handler) ServeDNS(w dns.ResponseWriter, m *dns.Msg) {
-	message, err := h.buildMessage(m)
-
+	message, err := h.handleQuery(m)
 	if err != nil {
 		_ = w.WriteMsg(m)
 		return

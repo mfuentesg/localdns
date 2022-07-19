@@ -73,9 +73,8 @@ func (srv *Server) PutRecord(ctx context.Context, r *pb.Record) (*pb.Record, err
 
 func (srv *Server) DeleteRecord(_ context.Context, r *pb.Record) (*emptypb.Empty, error) {
 	err := srv.st.Delete(r.Id)
-	logEntry := log.WithFields(log.Fields{"id": r.Id})
 	if err != nil {
-		logEntry.Error("unable to delete the record")
+		log.WithField("id", r.Id).Error("unable to delete the record")
 		return nil, err
 	}
 	return new(emptypb.Empty), nil
@@ -85,7 +84,7 @@ func (srv *Server) ListRecords(_ context.Context, _ *emptypb.Empty) (*pb.RecordL
 	records, err := srv.st.List()
 
 	if err != nil {
-		log.Error("unable to retrieve records")
+		log.WithField("reason", err).Error("unable to retrieve records")
 		return nil, err
 	}
 

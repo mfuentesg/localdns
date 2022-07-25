@@ -2,6 +2,7 @@ package transport
 
 import (
 	"github.com/mfuentesg/localdns/pb"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -14,6 +15,7 @@ type Client struct {
 func New(url string) (*Client, error) {
 	conn, err := grpc.Dial(url, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 

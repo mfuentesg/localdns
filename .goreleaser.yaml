@@ -4,7 +4,7 @@ before:
 
 builds:
   - main: ./cli
-    id: ldns
+    id: "ldns"
     binary: ldns
     env:
       - CGO_ENABLED=0
@@ -13,7 +13,7 @@ builds:
       - darwin
 
   - main: ./
-    id: localdns
+    id: "localdns"
     binary: localdns
     env:
       - CGO_ENABLED=0
@@ -29,7 +29,7 @@ archives:
       amd64: x86_64
 
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
@@ -38,5 +38,5 @@ changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
+      - "^docs:"
+      - "^test:"

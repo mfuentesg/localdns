@@ -1,10 +1,10 @@
 dns
 !server/dns
 .idea
-
 dist/
 .DS_Store
 tmp
 localdns.db
 .localdns.yaml
 localdns
+.ldns.yaml

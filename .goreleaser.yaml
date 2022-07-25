@@ -22,11 +22,16 @@ builds:
       - darwin
 
 archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      386: i386
-      amd64: x86_64
+  - id: "localdns"
+    name_template: "{{.Binary}}_{{.Version}}_{{.Os}}-{{.Arch}}"
+    builds:
+      - "localdns"
+
+  - id: "ldns"
+    name_template: "{{.Binary}}_{{.Version}}_{{.Os}}-{{.Arch}}"
+    builds:
+      - "ldns"
+
 
 checksum:
   name_template: "checksums.txt"

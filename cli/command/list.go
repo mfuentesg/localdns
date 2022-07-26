@@ -16,11 +16,7 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "list all registered dns records",
 	Run: func(cmd *cobra.Command, args []string) {
-		server, err := cmd.Flags().GetString("server")
-		if err != nil {
-			log.Fatal(err)
-		}
-
+		server, _ := cmd.Flags().GetString("server")
 		client, err := transport.New(server)
 		if err != nil {
 			log.Fatal(err)

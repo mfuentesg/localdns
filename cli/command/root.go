@@ -18,6 +18,6 @@ func Execute() {
 }
 
 func init() {
-	var server string
-	rootCmd.PersistentFlags().StringVarP(&server, "server", "s", "127.0.0.1:8080", "server address (IP:PORT)")
+	rootCmd.PersistentFlags().StringP("server", "s", "127.0.0.1:8080", "server address (IP:PORT)")
+	_ = rootCmd.MarkFlagRequired("server")
 }
